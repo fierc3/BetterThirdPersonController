@@ -5,7 +5,7 @@ using UnityEngine;
 public class FreeClimb : MonoBehaviour
 {
     [SerializeField]
-    private Animator animator;
+    public Animator animator;
     [SerializeField]
     private float offsetFromWall = 0.3f;
 
@@ -14,6 +14,9 @@ public class FreeClimb : MonoBehaviour
     [SerializeField]
     private float rotateSpeed = 0.2f;
 
+    [SerializeField]
+    private float inwardDistance = 1f;
+
     private bool isClimbing = false;
     private bool isLerping = false;
     private bool isInPosition = false;
@@ -21,6 +24,11 @@ public class FreeClimb : MonoBehaviour
     private Vector3 targetPos = Vector3.zero;
     private Quaternion startRot = Quaternion.identity;
     private Quaternion endRot = Quaternion.identity;
+
+    // ik related
+    public IKSnapshot baseIkSnapshot;
+    [SerializeField]
+    private FreeClimbAnimHook hook;
 
     [SerializeField]
     private float positionOffset = 0.5f;
@@ -38,6 +46,7 @@ public class FreeClimb : MonoBehaviour
         helper = new GameObject().transform;
         helper.name = "helper";
 
+        hook.Init(this, this.helper);
         CheckForClimb();
     }
 
@@ -96,7 +105,7 @@ public class FreeClimb : MonoBehaviour
             startPos = transform.position;
             //var tp = helper.position - transform.position;
             targetPos = helper.position;
-
+            hook.CreatePositions(targetPos);
         }
         else
         {
@@ -131,7 +140,7 @@ public class FreeClimb : MonoBehaviour
 
         origin += targetMoveDir * distance;
         dir = helper.forward;
-        float distanceForward = 0.5f;
+        float distanceForward = inwardDistance;
 
         Debug.DrawRay (origin, dir * distanceForward, Color.blue);
 
@@ -169,6 +178,7 @@ public class FreeClimb : MonoBehaviour
         {
             t = 1;
             isInPosition = true;
+            hook.CreatePositions(targetPos);
         }
 
         var tp = Vector3.Lerp(startPos, targetPos, t);
@@ -184,4 +194,10 @@ public class FreeClimb : MonoBehaviour
         return target + offset;
     }
 
+}
+
+[System.Serializable]
+public class IKSnapshot
+{
+    public Vector3 rh, lh, rf, lf;
 }
